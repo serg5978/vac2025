@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отпуска 2025</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .month {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        .month-name {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            font-weight: bold;
+            font-size: 0.8em;
+            text-align: center;
+        }
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .day {
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.8em;
+            border: 1px solid #eee;
+        }
+        .day:hover {
+            background-color: #f0f0f0;
+        }
+        .working-days {
+            outline: 2px solid red;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .color-btn {
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            color: white;
+            font-weight: bold;
+        }
+        .clear-btn {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="calendar" id="calendar"></div>
+        <div class="controls">
+            <button class="color-btn" style="background-color: #FF0000;" data-color="#FF0000">Вика</button>
+            <button class="color-btn" style="background-color: #5BA300;" data-color="#5BA300">Дима</button>
+            <button class="color-btn" style="background-color: #00CDFF;" data-color="#00CDFF">Катя</button>
+            <button class="color-btn" style="background-color: #9B0000;" data-color="#9B0000">Оксана</button>
+            <button class="color-btn" style="background-color: #FF00FF;" data-color="#FF00FF">Оля</button>
+            <button class="color-btn" style="background-color: #4F7199;" data-color="#4F7199">Сергей</button>
+            <button class="color-btn" style="background-color: #0A0799;" data-color="#0A0799">Эльнара</button>
+            <button class="color-btn" style="background-color: #800080;" data-color="#800080">Юра</button>
+            <button class="clear-btn" id="clearCell">Очист день</button>
+            <button class="clear-btn" id="clearAll">Очист всё</button>
+        </div>
+    </div>
+    <script>
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        let selectedColor = null;
+        let cellColors = JSON.parse(localStorage.getItem('cellColors')) || {};
+
+        function createCalendar() {
+            const calendar = document.getElementById('calendar');
+            const year = 2025;
+
+            for (let month = 0; month < 12; month++) {
+                const monthElement = document.createElement('div');
+                monthElement.className = 'month';
+
+                const monthName = document.createElement('div');
+                monthName.className = 'month-name';
+                monthName.textContent = months[month];
+                monthElement.appendChild(monthName);
+
+                const weekdaysElement = document.createElement('div');
+                weekdaysElement.className = 'weekdays';
+                weekdays.forEach(day => {
+                    const dayElement = document.createElement('div');
+                    dayElement.textContent = day;
+                    weekdaysElement.appendChild(dayElement);
+                });
+                monthElement.appendChild(weekdaysElement);
+
+                const daysElement = document.createElement('div');
+                daysElement.className = 'days';
+
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                for (let i = 0; i < firstDay; i++) {
+                    daysElement.appendChild(document.createElement('div'));
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'day';
+                    dayElement.textContent = day;
+                    dayElement.dataset.date = `${year}-${month + 1}-${day}`;
+
+                    const isWorkingDay = isWorking(year, month, day);
+                    if (isWorkingDay) {
+                        dayElement.classList.add('working-days');
+                    }
+
+                    const cellId = `${year}-${month + 1}-${day}`;
+                    if (cellColors[cellId]) {
+                        applyColors(dayElement, cellColors[cellId]);
+                    }
+
+                    dayElement.addEventListener('click', handleDayClick);
+                    daysElement.appendChild(dayElement);
+                }
+
+                monthElement.appendChild(daysElement);
+                calendar.appendChild(monthElement);
+            }
+        }
+
+        function isWorking(year, month, day) {
+            const date = new Date(year, month, day);
+            const startDate = new Date(year, 0, 2);
+            const daysDiff = Math.floor((date - startDate) / (24 * 60 * 60 * 1000));
+            const cycleDay = daysDiff % 6;
+            return cycleDay >= 0 && cycleDay < 3;
+        }
+
+        function handleDayClick(event) {
+            const cell = event.target;
+            const cellId = cell.dataset.date;
+
+            if (selectedColor === 'clear') {
+                cell.style.background = '';
+                delete cellColors[cellId];
+            } else if (selectedColor) {
+                if (!cellColors[cellId]) {
+                    cellColors[cellId] = [];
+                }
+                if (cellColors[cellId].length < 3 && !cellColors[cellId].includes(selectedColor)) {
+                    cellColors[cellId].push(selectedColor);
+                    applyColors(cell, cellColors[cellId]);
+                }
+            }
+
+            localStorage.setItem('cellColors', JSON.stringify(cellColors));
+        }
+
+        function applyColors(cell, colors) {
+            if (colors.length === 1) {
+                cell.style.background = colors[0];
+            } else if (colors.length === 2) {
+                cell.style.background = `linear-gradient(to bottom, ${colors[0]} 50%, ${colors[1]} 50%)`;
+            } else if (colors.length === 3) {
+                cell.style.background = `linear-gradient(to bottom, ${colors[0]} 33%, ${colors[1]} 33%, ${colors[1]} 66%, ${colors[2]} 66%)`;
+            }
+        }
+
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedColor = btn.dataset.color;
+                document.querySelectorAll('.color-btn').forEach(b => b.style.outline = '');
+                btn.style.outline = '2px solid black';
+            });
+        });
+
+        document.getElementById('clearCell').addEventListener('click', () => {
+            selectedColor = 'clear';
+            document.querySelectorAll('.color-btn').forEach(b => b.style.outline = '');
+        });
+
+        document.getElementById('clearAll').addEventListener('click', () => {
+            cellColors = {};
+            localStorage.removeItem('cellColors');
+            document.querySelectorAll('.day').forEach(cell => {
+                cell.style.background = '';
+            });
+        });
+
+        createCalendar();
+    </script>
+</body>
+</html>
