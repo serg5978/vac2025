@@ -42,12 +42,14 @@
             text-align: center;
         }
         .days {
-            display: grid;
+			display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 2px;
         }
         .day {
-            aspect-ratio: 1;
+			width: 30px;
+			height: 30px;
+            aspect-ratio: auto;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -59,7 +61,7 @@
             background-color: #f0f0f0;
         }
         .working-days {
-            outline: 2px solid red;
+            outline: 3px solid red;
         }
         .controls {
             display: flex;
@@ -102,7 +104,7 @@
             'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
             'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
         ];
-        const weekdays = ['Пнд', 'Втр', 'Срд', 'Чтв', 'Птн', 'Суб', 'Вск'];
+        const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
         let selectedColor = null;
         let cellColors = JSON.parse(localStorage.getItem('cellColors')) || {};
 
